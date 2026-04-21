@@ -27,6 +27,7 @@ snowflake/
 ├── airflow/
 │   ├── dags/README.md         # Points to ../dags/
 │   ├── logs/, plugins/
+├── packages.txt               # OS packages for Astro Runtime ONBUILD (may be empty)
 ├── requirements.txt           # Extra deps for Astro image (Snowflake provider)
 ├── requirements-airflow.txt   # Local venv: Airflow + provider
 └── requirements-airflow-docker.txt  # Local Docker image only
