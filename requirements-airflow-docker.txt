@@ -1,0 +1,2 @@
+# Installed on top of apache/airflow image — do not pin apache-airflow here (comes from base image).
+apache-airflow-providers-snowflake>=5.0.0

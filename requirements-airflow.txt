@@ -1,0 +1,4 @@
+# Airflow and Snowflake provider for job prospecting pipeline.
+# Pin Airflow 2.x for local venvs. Docker uses the image’s Airflow + requirements-airflow-docker.txt.
+apache-airflow>=2.5.0,<3
+apache-airflow-providers-snowflake>=5.0.0

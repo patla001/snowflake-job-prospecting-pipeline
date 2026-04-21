@@ -1,0 +1,81 @@
+# --- Python / virtual environments ---
+.venv/
+venv/
+ENV/
+env/
+.python-version
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg
+*.egg-info/
+.eggs/
+dist/
+build/
+pip-wheel-metadata/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+*.cover
+.hypothesis/
+
+# --- Environment & local secrets (keep *.example files in git) ---
+.env
+.env.local
+.env.*.local
+!.env.example
+!.env.*.example
+*.secrets
+secrets.yaml
+secrets.yml
+
+# --- Snowflake (key-pair auth, sessions, local CLI) ---
+*.p8
+rsa_key.*
+snowflake_rsa_key.*
+*_rsa_key.pem
+snowflake_credentials.*
+.snowsql/
+snowsql_rt.log
+
+# --- AWS (typical local credential locations / exports) ---
+.aws/
+aws-credentials.env
+aws-exports.js
+amplifyconfiguration.json
+
+# --- Astronomer / Astro (local dev, auth cache) ---
+.astro/
+astro_deploy_token.txt
+.airflowignore.local
+
+# --- Airflow local state (logs may contain connection errors with hints of secrets) ---
+airflow_home/
+airflow.cfg
+standalone_admin_password.txt
+webserver_config.py
+airflow/logs/*
+!airflow/logs/.gitkeep
+
+# --- Generic key material often copied into a repo by mistake ---
+id_rsa
+id_rsa.pub
+*.pem
+*.pfx
+*.p12
+
+# --- IDE / OS ---
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
