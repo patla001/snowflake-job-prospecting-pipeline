@@ -51,8 +51,8 @@ aws-credentials.env
 aws-exports.js
 amplifyconfiguration.json
 
-# --- Astronomer / Astro (local dev, auth cache) ---
-.astro/
+# --- Astronomer / Astro ---
+# Keep `.astro/config.yaml` in git so `astro deploy` works from repo root.
 astro_deploy_token.txt
 .airflowignore.local
 

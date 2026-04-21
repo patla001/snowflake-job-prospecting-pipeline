@@ -14,6 +14,7 @@ A capstone project using **Snowflake** to analyze job market data for prospectin
 ```
 snowflake/
 ├── README.md
+├── .astro/config.yaml         # Marks repo root as an Astro project (`astro deploy`)
 ├── Dockerfile                 # Astro Runtime 3.2 (Airflow 3) — Astronomer / Astro Cloud
 ├── Dockerfile.local           # apache/airflow:3.2 — local docker-compose only
 ├── docker-compose.yaml
@@ -31,7 +32,7 @@ snowflake/
 └── requirements-airflow-docker.txt  # Local Docker image only
 ```
 
-**Astronomer:** connect this GitHub repo; the deployment build uses the root **`Dockerfile`** and **`dags/`** per [Astronomer deploy docs](https://www.astronomer.io/docs/astro/deploy-code).
+**Astronomer / Astro CLI:** This repo root is an Astro project (see **`.astro/config.yaml`**). From the repo root run `astro login` then `astro deploy` (or `astro deploy <deployment-id>`). The image uses the root **`Dockerfile`** and **`dags/`** — see [Deploy code](https://www.astronomer.io/docs/astro/deploy-code). The nested **`astro-project/`** folder is an older scaffold; use the **repository root** for deploys.
 
 ## Prerequisites
 
