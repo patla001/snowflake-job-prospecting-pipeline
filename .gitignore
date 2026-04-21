@@ -63,6 +63,8 @@ standalone_admin_password.txt
 webserver_config.py
 airflow/logs/*
 !airflow/logs/.gitkeep
+config/*
+!config/.gitkeep
 
 # --- Generic key material often copied into a repo by mistake ---
 id_rsa

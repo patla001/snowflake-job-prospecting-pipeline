@@ -17,7 +17,7 @@ This document explains how to run the job prospecting pipeline in **Snowflake** 
 
 - **Snowflake account** (trial: [signup.snowflake.com](https://signup.snowflake.com))
 - **Snowflake UI** (Worksheets) or **SnowSQL** CLI
-- For Airflow: **Python 3.8+**, **Apache Airflow 2.x**, and **Snowflake Airflow provider**
+- For Airflow: **Python 3.9+**, **Apache Airflow 3.x**, and **Snowflake Airflow provider** (DAG uses `airflow.sdk` — see [Upgrading to Airflow 3](https://airflow.apache.org/docs/apache-airflow/3.2.0/installation/upgrading_to_airflow3.html))
 
 ---
 
@@ -179,8 +179,8 @@ pip install -r requirements-airflow.txt
 ### 3. DAG location and schedule
 
 - Place the DAG file in your Airflow **DAGs folder** (e.g. `~/airflow/dags/` or the path set in `airflow.cfg`).
-- The project’s DAG file is: **`airflow/dags/job_prospecting_pipeline_dag.py`**.  
-  Copy it (or symlink the project’s `airflow/dags` folder into your DAGs directory) so Airflow can load it.
+- The project’s DAG file is: **`dags/job_prospecting_pipeline_dag.py`** (repo root — used by **Astronomer** and this repo’s `docker-compose`).  
+  For a classic Airflow install, copy that file into your DAGs directory so Airflow can load it.
 
 ### 4. Deploy Snowflake procedures (required before first DAG run)
 

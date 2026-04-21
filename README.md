@@ -14,23 +14,24 @@ A capstone project using **Snowflake** to analyze job market data for prospectin
 ```
 snowflake/
 ├── README.md
+├── Dockerfile                 # Astro Runtime 3.2 (Airflow 3) — Astronomer / Astro Cloud
+├── Dockerfile.local           # apache/airflow:3.2 — local docker-compose only
+├── docker-compose.yaml
 ├── docs/
-│   └── PIPELINE_EXECUTION.md # How to run the pipeline in Snowflake + Airflow
+│   └── PIPELINE_EXECUTION.md  # Snowflake + Airflow / Astro steps
+├── dags/
+│   └── job_prospecting_pipeline_dag.py  # Airflow DAG (canonical path for Astro + compose)
 ├── sql/
-│   ├── 01_setup.sql          # Warehouse, database, schemas, stage
-│   ├── 02_staging.sql        # Staging tables
-│   ├── 02_dimensions_scd2.sql# Dimension tables (SCD Type 2)
-│   ├── 02_fact.sql           # Fact table and bridge
-│   ├── 03_pipeline_ingest.sql   # Ingest + merge_staging_deduped procedure
-│   ├── 03_pipeline_scd2_merge.sql # SCD2 merge procedures
-│   ├── 03_pipeline_fact_load.sql # Fact load procedures
-│   └── 03_sample_data.sql   # Optional seed data
+│   ├── 01_setup.sql … 03_sample_data.sql  # Warehouse → pipeline SQL
 ├── airflow/
-│   └── dags/
-│       └── job_prospecting_pipeline_dag.py  # Airflow DAG
-├── requirements.txt
-└── requirements-airflow.txt # Airflow + Snowflake provider
+│   ├── dags/README.md         # Points to ../dags/
+│   ├── logs/, plugins/
+├── requirements.txt           # Extra deps for Astro image (Snowflake provider)
+├── requirements-airflow.txt   # Local venv: Airflow + provider
+└── requirements-airflow-docker.txt  # Local Docker image only
 ```
+
+**Astronomer:** connect this GitHub repo; the deployment build uses the root **`Dockerfile`** and **`dags/`** per [Astronomer deploy docs](https://www.astronomer.io/docs/astro/deploy-code).
 
 ## Prerequisites
 

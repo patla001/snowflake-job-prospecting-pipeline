@@ -1,4 +1,4 @@
-# Extra Python deps on apache/airflow:3.2 for docker-compose (Dockerfile.local).
+# Astro Runtime image — add providers only (Airflow is in the base image).
 apache-airflow-providers-snowflake>=5.0.0
 apache-airflow-providers-standard>=1.0.0
 apache-airflow-providers-fab>=2.0.0

@@ -1,0 +1,5 @@
+# Local Docker Compose only — Apache Airflow 3.2 (not used by Astronomer).
+FROM apache/airflow:3.2.0
+
+COPY requirements-airflow-docker.txt /requirements-airflow-docker.txt
+RUN pip install --no-cache-dir -r /requirements-airflow-docker.txt

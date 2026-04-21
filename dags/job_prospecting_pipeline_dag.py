@@ -1,21 +1,19 @@
 """
-Job Prospecting Pipeline DAG — Orchestrates Snowflake ingest, SCD2 merges, and fact load.
-Requires: apache-airflow >= 2.5, apache-airflow-providers-snowflake (Snowflake connection type).
-Uses SQLExecuteQueryOperator so stored procedures (CALL) run via the Snowflake connector, not the SQL API.
+Job Prospecting Pipeline DAG — Snowflake ingest, SCD2 merges, fact load.
+Apache Airflow 3.x: authoring imports from airflow.sdk; schedule uses `schedule` (not schedule_interval).
 Connection: snowflake_default — Admin → Connections → Snowflake.
 """
 
 from datetime import datetime, timedelta
 
-from airflow import DAG
-from airflow.models import Variable
-from airflow.operators.python import PythonOperator
 from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
+from airflow.providers.standard.operators.python import PythonOperator
+from airflow.sdk import DAG, Variable
 
 SNOWFLAKE_CONN_ID = "snowflake_default"
-DATABASE = Variable.get("snowflake_job_prospecting_database", default_var="JOB_PROSPECTING_DB")
-SCHEMA_STAGING = Variable.get("snowflake_job_prospecting_schema_staging", default_var="STAGING")
-SCHEMA_EDW = Variable.get("snowflake_job_prospecting_schema_edw", default_var="EDW")
+DATABASE = Variable.get("snowflake_job_prospecting_database", default="JOB_PROSPECTING_DB")
+SCHEMA_STAGING = Variable.get("snowflake_job_prospecting_schema_staging", default="STAGING")
+SCHEMA_EDW = Variable.get("snowflake_job_prospecting_schema_edw", default="EDW")
 
 default_args = {
     "owner": "data-engineering",
@@ -29,7 +27,7 @@ dag = DAG(
     dag_id="job_prospecting_pipeline",
     default_args=default_args,
     description="Snowflake job prospecting: ingest → staging merge → SCD2 → fact load",
-    schedule_interval=timedelta(days=1),
+    schedule=timedelta(days=1),
     start_date=datetime(2025, 1, 1),
     catchup=False,
     tags=["snowflake", "job-prospecting", "scd2"],

@@ -1,16 +1,18 @@
-# Airflow 2.11 + Postgres (LocalExecutor) for the job prospecting DAG.
-#
-# Prerequisites: Docker Compose v2.14+ (for service_completed_successfully).
+# Apache Airflow 3.2 + Postgres (LocalExecutor) — minimal services for local dev.
+# Airflow 3 replaces `webserver` with `api-server` and requires a separate `dag-processor`.
+# See https://airflow.apache.org/docs/apache-airflow/stable/howto/docker-compose/index.html
 #
 # Start:
-#   cp -n .env.example .env    # optional; on Linux set AIRFLOW_UID=$(id -u) in .env
+#   cp -n .env.example .env
 #   docker compose up --build -d
 #
-# UI: http://localhost:8080  (default admin / admin from airflow-init)
+# UI: http://localhost:8080  (admin / admin from airflow-init)
 # Then add Snowflake: Admin → Connections → snowflake_default (see docs/PIPELINE_EXECUTION.md)
 
 x-airflow-common: &airflow-common
-  build: .
+  build:
+    context: .
+    dockerfile: Dockerfile.local
   environment: &airflow-common-env
     AIRFLOW__CORE__EXECUTOR: LocalExecutor
     AIRFLOW__CORE__LOAD_EXAMPLES: "false"
@@ -18,11 +20,14 @@ x-airflow-common: &airflow-common
     AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
     AIRFLOW__SCHEDULER__ENABLE_HEALTH_CHECK: "true"
     AIRFLOW__CORE__FERNET_KEY: "46BKJoQYlQHO4qBHoUDK1zTiOe7GvwQDoJ9bE8v7VWU="
-    AIRFLOW__WEBSERVER__SECRET_KEY: "dev-only-replace-for-production"
+    AIRFLOW__CORE__AUTH_MANAGER: airflow.providers.fab.auth_manager.fab_auth_manager.FabAuthManager
+    AIRFLOW__CORE__EXECUTION_API_SERVER_URL: "http://airflow-apiserver:8080/execution/"
+    AIRFLOW__API_AUTH__JWT_SECRET: "dev-jwt-secret-change-in-production-min-32-chars!!"
   volumes:
-    - ./airflow/dags:/opt/airflow/dags
+    - ./dags:/opt/airflow/dags
     - ./airflow/logs:/opt/airflow/logs
     - ./airflow/plugins:/opt/airflow/plugins
+    - ./config:/opt/airflow/config
   user: "${AIRFLOW_UID:-50000}:0"
 
 services:
@@ -48,7 +53,7 @@ services:
       - -c
       - |
         set -e
-        mkdir -p /opt/airflow/logs /opt/airflow/dags /opt/airflow/plugins
+        mkdir -p /opt/airflow/logs /opt/airflow/dags /opt/airflow/plugins /opt/airflow/config
         chown -R "${AIRFLOW_UID:-50000}:0" /opt/airflow/
         exec /entrypoint airflow version
     environment:
@@ -61,20 +66,36 @@ services:
       postgres:
         condition: service_healthy
 
-  airflow-webserver:
+  airflow-apiserver:
     <<: *airflow-common
-    command: webserver
+    command: api-server
     ports:
       - "8080:8080"
     depends_on:
       airflow-init:
         condition: service_completed_successfully
     healthcheck:
-      test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
+      test: ["CMD", "curl", "--fail", "http://localhost:8080/api/v2/monitor/health"]
       interval: 30s
       timeout: 10s
       retries: 5
-      start_period: 30s
+      start_period: 40s
+    restart: unless-stopped
+
+  airflow-dag-processor:
+    <<: *airflow-common
+    command: dag-processor
+    depends_on:
+      airflow-init:
+        condition: service_completed_successfully
+      airflow-apiserver:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", 'airflow jobs check --job-type DagProcessorJob --hostname "$${HOSTNAME}"']
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
     restart: unless-stopped
 
   airflow-scheduler:
@@ -83,12 +104,14 @@ services:
     depends_on:
       airflow-init:
         condition: service_completed_successfully
+      airflow-apiserver:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "--fail", "http://localhost:8974/health"]
       interval: 30s
       timeout: 10s
       retries: 5
-      start_period: 30s
+      start_period: 40s
     restart: unless-stopped
 
 volumes:
