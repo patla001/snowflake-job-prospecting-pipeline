@@ -23,7 +23,8 @@ snowflake/
 ├── dags/
 │   └── job_prospecting_pipeline_dag.py  # Airflow DAG (canonical path for Astro + compose)
 ├── sql/
-│   ├── 01_setup.sql … 03_sample_data.sql  # Warehouse → pipeline SQL
+│   ├── 01_setup.sql … 03_pipeline_*.sql   # Warehouse → procedures
+│   └── 03_seed_dim_date.sql               # Populate dim_date (nicer posted_date_sk)
 ├── airflow/
 │   ├── dags/README.md         # Points to ../dags/
 │   ├── logs/, plugins/

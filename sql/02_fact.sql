@@ -2,13 +2,16 @@
 -- 02_fact.sql — Fact table and bridge for star schema
 -- Data modeling: fact_job_posting links to SCD2 dimensions via surrogate keys
 -- ============================================================
+--
+-- Fully qualified names — no USE DATABASE / USE SCHEMA required.
+-- Run after 02_dimensions_scd2.sql (FKs reference dim_skill).
+-- ============================================================
 
-USE DATABASE JOB_PROSPECTING_DB;
-USE SCHEMA EDW;
+USE ROLE ACCOUNTADMIN;
 
 -- Fact: one row per job posting (grain: one posting per source + external_id)
 -- Surrogate keys point to current (or point-in-time) dimension versions
-CREATE TABLE IF NOT EXISTS fact_job_posting (
+CREATE TABLE IF NOT EXISTS JOB_PROSPECTING_DB.EDW.fact_job_posting (
   job_posting_sk   INTEGER AUTOINCREMENT PRIMARY KEY,
   -- Natural key for idempotency and incremental
   source_system   VARCHAR(100) NOT NULL,
@@ -33,15 +36,15 @@ CREATE TABLE IF NOT EXISTS fact_job_posting (
 );
 
 -- Clustering for big data: time-series and filter by date/source
-ALTER TABLE fact_job_posting CLUSTER BY (posted_date_sk, source_sk);
+ALTER TABLE JOB_PROSPECTING_DB.EDW.fact_job_posting CLUSTER BY (posted_date_sk, source_sk);
 
 -- Bridge: many-to-many between job posting and skills (fact grain + skill)
-CREATE TABLE IF NOT EXISTS fact_job_skill (
+CREATE TABLE IF NOT EXISTS JOB_PROSPECTING_DB.EDW.fact_job_skill (
   job_posting_sk   INTEGER NOT NULL,
   skill_sk         INTEGER NOT NULL,
   is_required      BOOLEAN DEFAULT TRUE,
   effective_from   TIMESTAMP_NTZ DEFAULT CURRENT_TIMESTAMP(),
   PRIMARY KEY (job_posting_sk, skill_sk),
-  FOREIGN KEY (job_posting_sk) REFERENCES fact_job_posting(job_posting_sk),
-  FOREIGN KEY (skill_sk)       REFERENCES dim_skill(skill_sk)
+  FOREIGN KEY (job_posting_sk) REFERENCES JOB_PROSPECTING_DB.EDW.fact_job_posting(job_posting_sk),
+  FOREIGN KEY (skill_sk)       REFERENCES JOB_PROSPECTING_DB.EDW.dim_skill(skill_sk)
 );

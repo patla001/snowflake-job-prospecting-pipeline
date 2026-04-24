@@ -33,10 +33,11 @@ Run once per environment (or when adding new objects).
 |-------|--------|-------------|
 | 1 | `sql/01_setup.sql` | Warehouse, database, schemas (STAGING, EDW, ANALYTICS), file format, stage |
 | 2 | `sql/02_staging.sql` | Staging tables: `stg_jobs_raw`, `stg_jobs_deduped` |
-| 3 | `sql/02_dimensions_scd2.sql` | Dimension tables with SCD2: `dim_company`, `dim_skill`, `dim_location`, `dim_source`, `dim_date` |
-| 4 | `sql/02_fact.sql` | Fact table `fact_job_posting` and bridge `fact_job_skill` |
+| 3 | `sql/02_dimensions_scd2.sql` | Dimension tables with SCD2: `dim_company`, `dim_skill`, `dim_location`, `dim_source`, `dim_date` (empty shell) |
+| 4 | `sql/03_seed_dim_date.sql` | **Populate `dim_date`** (calendar 2018–2035 + sentinel `19000101`) so `posted_date_sk` matches real dates in reports |
+| 5 | `sql/02_fact.sql` | Fact table `fact_job_posting` and bridge `fact_job_skill` |
 
-**Optional — date dimension:** If you have a script that populates `dim_date` (e.g. `03_seed_dim_date.sql`), run it after `02_dimensions_scd2.sql` so fact joins to `dim_date` work.
+Run **`03_seed_dim_date.sql` once** after dimensions exist and **before** (or anytime before) heavy fact reporting; re-run is safe (MERGE is idempotent).
 
 ### Phase 2: Load data into staging
 
@@ -101,9 +102,7 @@ Use a **single batch ID** for the whole run (same value used in Phase 2, or a ne
 1. **Merge staging into deduped table** (if you used Option A and copied into `stg_jobs_raw`):
 
    ```sql
-   USE DATABASE JOB_PROSPECTING_DB;
-
-   CALL STAGING.merge_staging_deduped('<your_batch_id>');
+   CALL JOB_PROSPECTING_DB.STAGING.merge_staging_deduped('<your_batch_id>');
    ```
 
    Replace `<your_batch_id>` with the value of `batch_id` from Phase 2 (e.g. from `SELECT $batch_id;`).
@@ -111,35 +110,34 @@ Use a **single batch ID** for the whole run (same value used in Phase 2, or a ne
 2. **SCD2 and dimension merges:**
 
    ```sql
-   CALL EDW.merge_dim_company_scd2();
-   CALL EDW.merge_dim_location_scd2();
-   CALL EDW.merge_dim_source();
-   CALL EDW.merge_dim_skill_scd2();   -- optional; no-op if no skill parsing
+   CALL JOB_PROSPECTING_DB.EDW.merge_dim_company_scd2();
+   CALL JOB_PROSPECTING_DB.EDW.merge_dim_location_scd2();
+   CALL JOB_PROSPECTING_DB.EDW.merge_dim_source();
+   CALL JOB_PROSPECTING_DB.EDW.merge_dim_skill_scd2();   -- optional; no-op if no skill parsing
    ```
 
 3. **Load fact table:**
 
    ```sql
-   CALL EDW.load_fact_job_posting('<your_batch_id>');
+   CALL JOB_PROSPECTING_DB.EDW.load_fact_job_posting('<your_batch_id>');
    ```
 
 4. **(Optional) Close outdated fact rows** (if you support SCD on the fact):
 
    ```sql
-   CALL EDW.close_outdated_fact_rows('<your_batch_id>');
+   CALL JOB_PROSPECTING_DB.EDW.close_outdated_fact_rows('<your_batch_id>');
    ```
 
 ### Summary: execution order (manual)
 
 ```
-01_setup.sql → 02_staging.sql → 02_dimensions_scd2.sql → 02_fact.sql
-    → [Optional: seed dim_date]
+01_setup.sql → 02_staging.sql → 02_dimensions_scd2.sql → 03_seed_dim_date.sql → 02_fact.sql
     → Load data (COPY INTO or 03_sample_data)
-    → CALL STAGING.merge_staging_deduped(batch_id)
-    → CALL EDW.merge_dim_company_scd2();
-    → CALL EDW.merge_dim_location_scd2();
-    → CALL EDW.merge_dim_source();
-    → CALL EDW.load_fact_job_posting(batch_id);
+    → CALL JOB_PROSPECTING_DB.STAGING.merge_staging_deduped(batch_id)
+    → CALL JOB_PROSPECTING_DB.EDW.merge_dim_company_scd2();
+    → CALL JOB_PROSPECTING_DB.EDW.merge_dim_location_scd2();
+    → CALL JOB_PROSPECTING_DB.EDW.merge_dim_source();
+    → CALL JOB_PROSPECTING_DB.EDW.load_fact_job_posting(batch_id);
 ```
 
 ---
@@ -182,42 +180,46 @@ pip install -r requirements-airflow.txt
 - The project’s DAG file is: **`dags/job_prospecting_pipeline_dag.py`** (repo root — used by **Astronomer** and this repo’s `docker-compose`).  
   For a classic Airflow install, copy that file into your DAGs directory so Airflow can load it.
 
-### 4. Deploy Snowflake procedures (required before first DAG run)
+### 4. Seed `dim_date` (recommended once per environment)
+
+Run **`sql/03_seed_dim_date.sql`** in Snowflake after dimension DDL exists so `fact_job_posting.posted_date_sk` resolves to real calendar keys (not only the `19000101` fallback).
+
+### 5. Deploy Snowflake procedures (required before first DAG run)
 
 The DAG calls stored procedures in Snowflake. Create them once by running these scripts in Snowflake (in order):
 
-- `sql/03_pipeline_ingest.sql` — creates `STAGING.merge_staging_deduped(batch_id)`
-- `sql/03_pipeline_scd2_merge.sql` — creates `EDW.merge_dim_company_scd2()`, `merge_dim_location_scd2()`, `merge_dim_source()`, `merge_dim_skill_scd2()`
-- `sql/03_pipeline_fact_load.sql` — creates `EDW.load_fact_job_posting(batch_id)`, `close_outdated_fact_rows(batch_id)`
+- `sql/03_pipeline_ingest.sql` — creates `JOB_PROSPECTING_DB.STAGING.merge_staging_deduped(batch_id)`
+- `sql/03_pipeline_scd2_merge.sql` — creates `JOB_PROSPECTING_DB.EDW.merge_dim_company_scd2()`, `merge_dim_location_scd2()`, `merge_dim_source()`, `merge_dim_skill_scd2()`
+- `sql/03_pipeline_fact_load.sql` — creates `JOB_PROSPECTING_DB.EDW.load_fact_job_posting(batch_id)`, `close_outdated_fact_rows(batch_id)`
 
 After that, the Airflow DAG can run without re-running these scripts.
 
-### 5. What the DAG does
+### 6. What the DAG does
 
 The DAG defines tasks that:
 
 1. **Setup (optional):** Run `01_setup.sql` (idempotent; safe to run every time or only on first deploy).
-2. **Create objects:** Run `02_staging.sql`, `02_dimensions_scd2.sql`, `02_fact.sql` (idempotent).
+2. **Create objects:** Run `02_staging.sql`, `02_dimensions_scd2.sql`, `02_fact.sql` (idempotent). In Snowflake, also run **`03_seed_dim_date.sql`** once so `dim_date` is populated for reporting.
 3. **Ingest:** Run a SQL statement that either:
    - Runs `COPY INTO` from the stage (requires files in `@STG_JOBS_FILES`), or
    - Inserts a small set of test rows into `stg_jobs_raw` with the run’s batch ID.
-4. **Merge staging:** `CALL STAGING.merge_staging_deduped(batch_id)`.
+4. **Merge staging:** `CALL JOB_PROSPECTING_DB.STAGING.merge_staging_deduped(batch_id)`.
 5. **SCD2 and dimensions:**  
-   `CALL EDW.merge_dim_company_scd2();`  
-   `CALL EDW.merge_dim_location_scd2();`  
-   `CALL EDW.merge_dim_source();`  
-   `CALL EDW.merge_dim_skill_scd2();`
-6. **Fact load:** `CALL EDW.load_fact_job_posting(batch_id);`
+   `CALL JOB_PROSPECTING_DB.EDW.merge_dim_company_scd2();`  
+   `CALL JOB_PROSPECTING_DB.EDW.merge_dim_location_scd2();`  
+   `CALL JOB_PROSPECTING_DB.EDW.merge_dim_source();`  
+   `CALL JOB_PROSPECTING_DB.EDW.merge_dim_skill_scd2();`
+6. **Fact load:** `CALL JOB_PROSPECTING_DB.EDW.load_fact_job_posting(batch_id);`
 
 The **batch ID** is derived from the Airflow run (e.g. `run_id` or `logical_date`) so each run has a unique identifier.
 
-### 6. Run the DAG
+### 7. Run the DAG
 
 - In the Airflow UI, find **job_prospecting_pipeline** (or the DAG id defined in the script).
 - Unpause the DAG, then trigger a run (e.g. **Trigger DAG**).
 - Monitor task success/failure in the Graph or Grid view.
 
-### 7. Variables (optional)
+### 8. Variables (optional)
 
 You can use Airflow Variables to override defaults:
 
@@ -237,7 +239,7 @@ Set them under **Admin → Variables** if your DAG reads them.
 | No rows in fact | Ensure staging has data for the batch_id you pass. Run `SELECT * FROM JOB_PROSPECTING_DB.STAGING.stg_jobs_deduped WHERE ingest_batch_id = '<batch_id>';`. Then check that dimension lookups (company_nk, location_nk, source_nk) match. |
 | COPY INTO fails | Confirm file format (CSV columns, delimiter, header) matches `FF_CSV_JOBS` and column list. Check stage path and that files are present: `LIST @STG_JOBS_FILES;`. |
 | Airflow Snowflake task fails | Verify connection (Host, account, user, password, warehouse). Ensure database/schema in connection Extra or in the operator match your Snowflake setup. Check task logs for the exact Snowflake error. |
-| dim_date join returns 19000101 | Populate `dim_date` for the date range of your `posted_date` (e.g. run `03_seed_dim_date.sql` or equivalent). |
+| dim_date join returns 19000101 | Run **`sql/03_seed_dim_date.sql`** (calendar + sentinel). Re-run the DAG for **new** batches to load facts with real `posted_date_sk`; older fact rows keep prior keys unless you reload them. |
 
 ---
 

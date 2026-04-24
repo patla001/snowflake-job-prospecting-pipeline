@@ -2,9 +2,9 @@
 -- 03_pipeline_ingest.sql — Big data ingest: COPY INTO from stage
 -- Data engineering: bulk load from files, batch id for idempotency
 -- ============================================================
-
-USE DATABASE JOB_PROSPECTING_DB;
-USE SCHEMA STAGING;
+--
+-- No USE DATABASE / USE SCHEMA; procedure is created under JOB_PROSPECTING_DB.STAGING.
+-- ============================================================
 
 -- Example: load CSV from internal stage into stg_jobs_raw
 -- Replace column list and stage path with your file layout

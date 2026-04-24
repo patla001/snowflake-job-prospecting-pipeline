@@ -2,12 +2,30 @@
 -- 03_pipeline_scd2_merge.sql — Slowly Changing Dimension Type 2
 -- Data engineering: close current row, insert new row when attributes change
 -- ============================================================
+--
+-- Fully qualified procedure names; USE DATABASE after bootstrap sets session context.
+-- Prerequisite: dimension tables in JOB_PROSPECTING_DB.EDW (see 02_dimensions_scd2.sql).
+--
+-- Bootstrap below matches 01_setup.sql so this script does not fail if the database was
+-- never created. If you see "not authorized", use the same role as for 01_setup / ask for
+-- USAGE on JOB_PROSPECTING_DB.
+-- ============================================================
+
+USE ROLE ACCOUNTADMIN;
+
+CREATE DATABASE IF NOT EXISTS JOB_PROSPECTING_DB
+  COMMENT = 'Job prospecting capstone - dimensional model + SCD2';
+
+CREATE SCHEMA IF NOT EXISTS JOB_PROSPECTING_DB.EDW
+  COMMENT = 'Enterprise data warehouse - star schema, SCD Type 2 dimensions';
+
+CREATE SCHEMA IF NOT EXISTS JOB_PROSPECTING_DB.STAGING
+  COMMENT = 'Landing zone for raw job data; batch and incremental loads';
 
 USE DATABASE JOB_PROSPECTING_DB;
-USE SCHEMA EDW;
 
 -- SCD2 merge for dim_company (natural key = company_name for simplicity; can use company_id if available)
-CREATE OR REPLACE PROCEDURE EDW.merge_dim_company_scd2()
+CREATE OR REPLACE PROCEDURE JOB_PROSPECTING_DB.EDW.merge_dim_company_scd2()
   RETURNS VARCHAR
   LANGUAGE SQL
   AS
@@ -43,7 +61,7 @@ CREATE OR REPLACE PROCEDURE EDW.merge_dim_company_scd2()
   $$;
 
 -- SCD2 merge for dim_skill (natural key = skill_name)
-CREATE OR REPLACE PROCEDURE EDW.merge_dim_skill_scd2()
+CREATE OR REPLACE PROCEDURE JOB_PROSPECTING_DB.EDW.merge_dim_skill_scd2()
   RETURNS VARCHAR
   LANGUAGE SQL
   AS
@@ -59,7 +77,7 @@ CREATE OR REPLACE PROCEDURE EDW.merge_dim_skill_scd2()
   $$;
 
 -- SCD2 merge for dim_location (natural key = location_label + location_type)
-CREATE OR REPLACE PROCEDURE EDW.merge_dim_location_scd2()
+CREATE OR REPLACE PROCEDURE JOB_PROSPECTING_DB.EDW.merge_dim_location_scd2()
   RETURNS VARCHAR
   LANGUAGE SQL
   AS
@@ -96,7 +114,7 @@ CREATE OR REPLACE PROCEDURE EDW.merge_dim_location_scd2()
   $$;
 
 -- Type 1 (no history) for dim_source
-CREATE OR REPLACE PROCEDURE EDW.merge_dim_source()
+CREATE OR REPLACE PROCEDURE JOB_PROSPECTING_DB.EDW.merge_dim_source()
   RETURNS VARCHAR
   LANGUAGE SQL
   AS
@@ -109,3 +127,5 @@ CREATE OR REPLACE PROCEDURE EDW.merge_dim_source()
     RETURN 'dim_source merge done';
   END;
   $$;
+
+-- Role grants: use 01_setup.sql (avoids duplicate GRANT worksheet warnings).

@@ -13,6 +13,8 @@ x-airflow-common: &airflow-common
   build:
     context: .
     dockerfile: Dockerfile.local
+  env_file:
+    - .env
   environment: &airflow-common-env
     AIRFLOW__CORE__EXECUTOR: LocalExecutor
     AIRFLOW__CORE__LOAD_EXAMPLES: "false"

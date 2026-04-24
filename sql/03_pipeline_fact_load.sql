@@ -2,12 +2,12 @@
 -- 03_pipeline_fact_load.sql — Fact load from staging + dimension lookups
 -- Data modeling: join staging to current dimension rows (SCD2), insert fact + bridge
 -- ============================================================
-
-USE DATABASE JOB_PROSPECTING_DB;
-USE SCHEMA EDW;
+--
+-- Fully qualified procedure names; no USE DATABASE / USE SCHEMA required.
+-- ============================================================
 
 -- Fact load: one row per job from stg_jobs_deduped with surrogate keys from current dims
-CREATE OR REPLACE PROCEDURE EDW.load_fact_job_posting(batch_id VARCHAR)
+CREATE OR REPLACE PROCEDURE JOB_PROSPECTING_DB.EDW.load_fact_job_posting(batch_id VARCHAR)
   RETURNS VARCHAR
   LANGUAGE SQL
   AS
@@ -59,7 +59,7 @@ CREATE OR REPLACE PROCEDURE EDW.load_fact_job_posting(batch_id VARCHAR)
   $$;
 
 -- Optional: close previous fact row when same natural key reappears (SCD2 on fact for job updates)
-CREATE OR REPLACE PROCEDURE EDW.close_outdated_fact_rows(batch_id VARCHAR)
+CREATE OR REPLACE PROCEDURE JOB_PROSPECTING_DB.EDW.close_outdated_fact_rows(batch_id VARCHAR)
   RETURNS VARCHAR
   LANGUAGE SQL
   AS
