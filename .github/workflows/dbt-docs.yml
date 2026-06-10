@@ -65,8 +65,9 @@ jobs:
           cp dbt/target/static_index.html _site/index.html
 
       - uses: actions/configure-pages@v5
-        with:
-          enablement: true   # auto-enable Pages on first run if not yet configured
+        # Pages must be enabled with Source = "GitHub Actions" in repo settings.
+        # The `enablement: true` shortcut requires administration:write, which
+        # GITHUB_TOKEN doesn't carry — that's a one-time UI click.
 
       - uses: actions/upload-pages-artifact@v3
         with:
