@@ -1,5 +1,14 @@
 # Caltrans PeMS Traffic Analytics
 
+![Snowflake](https://img.shields.io/badge/Snowflake-29B5E8?logo=snowflake&logoColor=white)
+![Airflow](https://img.shields.io/badge/Airflow-3.2-017CEE?logo=apacheairflow&logoColor=white)
+![dbt](https://img.shields.io/badge/dbt--snowflake-1.8-FF694A?logo=dbt&logoColor=white)
+![Tableau](https://img.shields.io/badge/Tableau-E97627?logo=tableau&logoColor=white)
+![Python](https://img.shields.io/badge/Python-3.11-3776AB?logo=python&logoColor=white)
+![Tests](https://img.shields.io/badge/tests-5%20passing-brightgreen)
+![Rows](https://img.shields.io/badge/fact%20rows-132M-blueviolet)
+![License](https://img.shields.io/badge/license-Academic-blue)
+
 When California locked down in March 2020, San Diego freeway congestion fell **66% in a single year** — and didn't fully recover for four years. This project pulls **12 years of Caltrans loop-detector data (≈133 million hourly rows)** into Snowflake and surfaces it in Tableau, so the question "where and when do Californians wait the longest in traffic?" can be answered with real numbers across the COVID era.
 
 ## Live demo
@@ -171,7 +180,9 @@ astro deploy                               # or:  astro deploy <deployment-id>
 ```
 snowflake/
 ├── README.md
-├── dags/pems_traffic_pipeline_dag.py     # 8-task Airflow DAG
+├── dags/
+│   ├── pems_traffic_pipeline_dag.py      # 8-task proc-driven DAG
+│   └── pems_dbt_build_dag.py             # dbt snapshot + build + test DAG (separate venv)
 ├── sql/
 │   ├── 01_setup.sql                       # Warehouse, DB, schemas, file formats, stages (DIRECTORY enabled)
 │   ├── 02_staging.sql                     # stg_pems_hour_raw / deduped + station meta
@@ -187,11 +198,13 @@ snowflake/
 │   └── 04_views.sql                       # ANALYTICS views for Tableau (full history)
 ├── scripts/
 │   ├── r3_backfill_year.sh                # Multi-year SnowSQL PUT loader (bash 3.2 compatible)
-│   └── r4_load_pipeline.sql               # Manual fallback when Airflow isn't available
+│   ├── r4_load_pipeline.sql               # Manual fallback when Airflow isn't available
+│   └── dbt.sh                             # Wrapper that sources .env + pins --profiles-dir/--project-dir
 ├── dbt/                                   # dbt-snowflake project (parallel transform layer)
 │   ├── dbt_project.yml
 │   ├── profiles.yml                       # reads SNOWSQL_PWD env var; no secrets committed
-│   └── models/                            # sources.yml + marts/
+│   ├── snapshots/dim_station_snapshot.sql # SCD2 via 'check' strategy + invalidate_hard_deletes
+│   └── models/                            # sources.yml + marts/ (4 models, 18 tests)
 ├── tableau/dashboard.twb                  # Tableau Desktop workbook
 ├── tests/dags/                            # DAG import / tag / retries pytest
 ├── docs/PIPELINE_EXECUTION.md             # Long-form pipeline runbook
