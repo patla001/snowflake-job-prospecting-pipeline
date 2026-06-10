@@ -18,3 +18,37 @@ models:
         description: Display label, "SR-<number> <direction>".
         data_tests:
           - not_null
+
+  - name: fact_traffic_hour
+    description: >
+      One row per (station, hour) with derived delay measures. dbt port of
+      load_fact_traffic_hour(batch_id). Incremental on (station_sk,
+      sample_datetime); first build scans all of stg_pems_hour_deduped.
+    columns:
+      - name: station_sk
+        data_tests: [not_null]
+      - name: freeway_sk
+        data_tests: [not_null]
+      - name: district_sk
+        data_tests: [not_null]
+      - name: posted_date_sk
+        data_tests: [not_null]
+      - name: hour_sk
+        data_tests: [not_null]
+      - name: sample_datetime
+        data_tests: [not_null]
+      - name: delay_min_per_veh
+        description: Per-vehicle minutes of delay vs 65 mph reference; clamped to ≥ 0.
+
+  - name: agg_traffic_daily
+    description: >
+      Daily rollup of fact_traffic_hour by (station, date). 24× smaller than
+      the hourly fact — preferred grain for Tableau when time-of-day isn't
+      needed.
+    columns:
+      - name: station_sk
+        data_tests: [not_null]
+      - name: posted_date_sk
+        data_tests: [not_null]
+      - name: hours_observed
+        data_tests: [not_null]

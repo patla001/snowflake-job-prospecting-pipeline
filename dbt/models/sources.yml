@@ -18,3 +18,19 @@ sources:
         description: >
           Per-snapshot station metadata (lat/lon, lane_count, station_type,
           length_mi). Loaded from PeMS station meta exports.
+
+  - name: edw
+    database: TRAFFIC_PEMS_DB
+    schema: EDW
+    description: >
+      Proc-built star schema (current authority for production data). dbt
+      reads dims from here while the ports are in progress. dim_station and
+      dim_freeway will be replaced by dbt-managed equivalents in #24 / a
+      later commit.
+    tables:
+      - name: dim_station
+        description: SCD2 station dimension. Use is_current = TRUE to get the live row.
+      - name: dim_freeway
+        description: Type 1 freeway dimension (number + direction → freeway_sk).
+      - name: dim_date
+        description: Calendar 2015-2030 + 19000101 sentinel.
