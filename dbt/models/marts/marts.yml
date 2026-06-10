@@ -52,3 +52,23 @@ models:
         data_tests: [not_null]
       - name: hours_observed
         data_tests: [not_null]
+
+  - name: dim_station
+    description: >
+      SCD2 station dimension. History comes from the dim_station_snapshot;
+      this model joins it to stg_pems_station_meta_raw for Type 1 enrichment
+      (lat/lon, lane_count, length_mi). Replaces the hand-rolled SCD2 logic
+      in EDW.merge_dim_station_scd2().
+    columns:
+      - name: station_sk
+        description: dbt_scd_id from the snapshot (VARCHAR hash, not the proc's INTEGER).
+        data_tests:
+          - not_null
+          - unique
+      - name: station_nk
+        description: PeMS station_id (natural key).
+        data_tests: [not_null]
+      - name: effective_from
+        data_tests: [not_null]
+      - name: is_current
+        data_tests: [not_null]
