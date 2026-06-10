@@ -70,3 +70,18 @@ SELECT 'dbt',  COUNT(*) FROM TRAFFIC_PEMS_DB.DBT_DEV_MARTS.dim_freeway;
 - Port `load_fact_traffic_hour` and `refresh_agg_traffic_daily` to incremental models.
 - Replace the hand-rolled SCD2 in `merge_dim_station_scd2` with a `dbt snapshot`.
 - Wire `dbt build` into the Airflow DAG, eventually replacing the proc-call tasks.
+
+## Refresh the docs site (`docs-site/index.html`)
+
+The repo ships a pre-built `docs-site/index.html` for GitHub Pages. To refresh it
+after editing models:
+
+```bash
+./scripts/dbt.sh docs generate --static
+cp dbt/target/static_index.html docs-site/index.html
+git add docs-site/index.html && git commit -m "Refresh dbt docs site"
+```
+
+Or trigger the **dbt docs → GitHub Pages** workflow (requires `SNOWSQL_PWD`
+as a repository secret) to regenerate and deploy automatically on the next
+push that touches `dbt/`.

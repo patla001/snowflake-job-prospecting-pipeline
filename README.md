@@ -14,7 +14,8 @@ When California locked down in March 2020, San Diego freeway congestion fell **6
 
 ## Live demo
 
-> _Tableau Public URL — coming soon (workbook is in `tableau/dashboard.twb`, will be published to Tableau Public for a clickable demo)._
+- **Tableau dashboard** — _Tableau Public URL coming soon_ (workbook in `tableau/dashboard.twb`)
+- **dbt docs site** — [`patla001.github.io/snowflake-pems-traffic-pipeline`](https://patla001.github.io/snowflake-pems-traffic-pipeline) (lineage graph, model descriptions, column-level catalog from Snowflake INFORMATION_SCHEMA — once GitHub Pages is enabled)
 
 ## What the data shows
 

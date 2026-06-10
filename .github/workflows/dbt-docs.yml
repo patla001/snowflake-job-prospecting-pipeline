@@ -1,0 +1,74 @@
+name: dbt docs → GitHub Pages
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'dbt/**'
+      - '.github/workflows/dbt-docs.yml'
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Don't cancel in-flight Pages deploys; queue them.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build-and-deploy:
+    name: Generate dbt docs + deploy to Pages
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify SNOWSQL_PWD secret
+        env:
+          PW: ${{ secrets.SNOWSQL_PWD }}
+        run: |
+          if [ -z "$PW" ]; then
+            echo "::error::SNOWSQL_PWD repository secret is not set."
+            echo "::error::Add it at: Settings → Secrets and variables → Actions → New repository secret"
+            exit 1
+          fi
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dbt-snowflake
+        run: |
+          python -m pip install --upgrade pip
+          pip install 'dbt-core>=1.8,<2' 'dbt-snowflake>=1.8,<2'
+
+      - name: dbt deps
+        working-directory: dbt
+        run: dbt deps --profiles-dir .
+
+      - name: dbt docs generate (static, single-file)
+        working-directory: dbt
+        env:
+          SNOWSQL_PWD: ${{ secrets.SNOWSQL_PWD }}
+        run: dbt docs generate --static --profiles-dir .
+
+      - name: Stage _site folder for Pages
+        run: |
+          mkdir -p _site
+          cp dbt/target/static_index.html _site/index.html
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - id: deployment
+        uses: actions/deploy-pages@v4
