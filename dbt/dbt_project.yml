@@ -1,0 +1,23 @@
+name: pems_pipeline
+version: '1.0.0'
+profile: pems_snowflake
+
+model-paths: [models]
+analysis-paths: [analyses]
+test-paths: [tests]
+seed-paths: [seeds]
+macro-paths: [macros]
+snapshot-paths: [snapshots]
+
+target-path: target
+clean-targets:
+  - target
+  - dbt_packages
+
+require-dbt-version: ['>=1.8.0', '<2.0.0']
+
+models:
+  pems_pipeline:
+    +materialized: table
+    marts:
+      +schema: MARTS

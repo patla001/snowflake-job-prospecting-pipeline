@@ -1,0 +1,20 @@
+version: 2
+
+models:
+  - name: dim_freeway
+    description: >
+      Distinct (freeway_number, direction_of_travel) lookup with a human
+      label. Mirrors the proc-built EDW.dim_freeway one-for-one.
+    columns:
+      - name: freeway_number
+        description: PeMS freeway number (e.g. 5 for I-5, 805, 163).
+        tests:
+          - not_null
+      - name: direction_of_travel
+        description: One-character compass direction (N, S, E, W).
+        tests:
+          - not_null
+      - name: freeway_label
+        description: Display label, "SR-<number> <direction>".
+        tests:
+          - not_null

@@ -77,6 +77,7 @@ flowchart LR
 | Warehouse | **Snowflake** | Dimensional model (SCD2 + Type 1), clustered hourly fact, daily rollup |
 | Orchestration | **Apache Airflow 3.x** (Astro Runtime) | 8-task DAG: COPY INTO → dedupe → SCD2 → fact → rollup |
 | Transform | **Snowflake Scripting procs** | Idempotent MERGE-style upserts for staging, dims, fact, rollup |
+| Transform (next) | **dbt-snowflake** ([`dbt/`](dbt/README.md)) | Bootstrapped — one model (`dim_freeway`) ported, builds side-by-side in `DBT_MARTS` while procs continue to own `EDW` |
 | Ingest | **SnowSQL `PUT`** via [`scripts/r3_backfill_year.sh`](scripts/r3_backfill_year.sh) | Multi-year + bash-3.2-portable backfill script with password prompt |
 | BI | **Tableau Desktop + Tableau Public** | 5 curated views in `ANALYTICS` schema; extract-based for the hourly grain |
 | Tests | **pytest** | DAG import, retries ≥ 2, tag presence |
@@ -186,6 +187,10 @@ snowflake/
 ├── scripts/
 │   ├── r3_backfill_year.sh                # Multi-year SnowSQL PUT loader (bash 3.2 compatible)
 │   └── r4_load_pipeline.sql               # Manual fallback when Airflow isn't available
+├── dbt/                                   # dbt-snowflake project (parallel transform layer)
+│   ├── dbt_project.yml
+│   ├── profiles.yml                       # reads SNOWSQL_PWD env var; no secrets committed
+│   └── models/                            # sources.yml + marts/
 ├── tableau/dashboard.twb                  # Tableau Desktop workbook
 ├── tests/dags/                            # DAG import / tag / retries pytest
 ├── docs/PIPELINE_EXECUTION.md             # Long-form pipeline runbook

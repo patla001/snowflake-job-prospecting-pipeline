@@ -95,6 +95,14 @@ delay_veh_hours    = MAX( (1/avg_speed − 1/65) × length_mi × total_flow, 0 )
 - Five views: `v_district_summary`, `v_wait_by_freeway_hour`, `v_holiday_vs_normal`, `v_day_vs_night`, `v_top_bottlenecks`.
 - Hourly-grain views (`v_wait_by_freeway_hour`, `v_day_vs_night`) scan `fact_traffic_hour` — use a **Tableau extract refreshed nightly** rather than live.
 
+## dbt project (parallel transform layer)
+
+A `dbt/` subproject at the repo root is being introduced alongside the procs. Conventions:
+- **Separate venv** — `.venv-dbt/` only; **never** install `dbt-core` into the Airflow venv (Airflow 3 / dbt dependency pins clash badly).
+- **Run via `./scripts/dbt.sh <cmd>`** — wrapper sources `.env` (so `SNOWSQL_PWD` is set) and pins `--profiles-dir`/`--project-dir` to `./dbt`. `profiles.yml` is committed (no secrets — password comes from `SNOWSQL_PWD` env var via `env_var()`).
+- **Schema isolation** — dbt builds into `TRAFFIC_PEMS_DB.DBT_MARTS`. The procs continue to own `EDW`. Diff rowcounts/columns between the two before repointing anything (Tableau, downstream views).
+- **Ports in progress** — only `dim_freeway` is dbt-built today. The proc-built `EDW.dim_freeway` is still authoritative; the dbt copy exists for verification.
+
 ## Conventions worth knowing
 
 - **Two Dockerfiles, two requirements files** — Astro deploy → `Dockerfile` + `requirements.txt`; local compose → `Dockerfile.local` + `requirements-airflow-docker.txt`; local venv → `requirements-airflow.txt`.

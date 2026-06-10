@@ -1,0 +1,20 @@
+version: 2
+
+sources:
+  - name: staging
+    database: TRAFFIC_PEMS_DB
+    schema: STAGING
+    description: >
+      Landing and dedupe layer produced by the Airflow DAG's COPY INTO
+      and merge_pems_staging_deduped procedure. Owned by the existing
+      Snowflake Scripting procs — dbt reads only.
+    tables:
+      - name: stg_pems_hour_deduped
+        description: >
+          One row per (station_id, sample_datetime). Source of truth for
+          station attributes (freeway, direction, district, lane_type)
+          carried inline alongside the hourly traffic measures.
+      - name: stg_pems_station_meta_raw
+        description: >
+          Per-snapshot station metadata (lat/lon, lane_count, station_type,
+          length_mi). Loaded from PeMS station meta exports.

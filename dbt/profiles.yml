@@ -1,0 +1,17 @@
+# dbt profile for the PeMS Snowflake project.
+# Password is read from SNOWSQL_PWD at runtime — never commit a real password here.
+# Run dbt from the repo root with:  dbt <cmd> --profiles-dir ./dbt --project-dir ./dbt
+pems_snowflake:
+  target: dev
+  outputs:
+    dev:
+      type: snowflake
+      account: IKFTMWM-HIB57885
+      user: epatlan1742
+      password: "{{ env_var('SNOWSQL_PWD') }}"
+      role: ACCOUNTADMIN
+      database: TRAFFIC_PEMS_DB
+      warehouse: TRAFFIC_PEMS_WH
+      schema: DBT_DEV
+      threads: 4
+      client_session_keep_alive: False
