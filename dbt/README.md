@@ -2,7 +2,7 @@
 
 A parallel transform layer being introduced alongside the existing Snowflake
 Scripting procs. The procs (called by the Airflow DAG) still own production
-data in the `EDW` schema; dbt builds run into a separate `DBT_MARTS` schema
+data in the `EDW` schema; dbt builds run into a separate `DBT_DEV_MARTS` schema
 so the two can be diffed safely.
 
 ## One-time setup
@@ -39,7 +39,7 @@ Use the `scripts/dbt.sh` wrapper — it sources `.env` and pins
 ```bash
 ./scripts/dbt.sh deps                              # install dbt-utils
 ./scripts/dbt.sh debug                             # "All checks passed!"
-./scripts/dbt.sh run  --select dim_freeway         # build into DBT_MARTS
+./scripts/dbt.sh run  --select dim_freeway         # build into DBT_DEV_MARTS
 ./scripts/dbt.sh test --select dim_freeway         # not_null tests
 ```
 
@@ -58,7 +58,7 @@ rowcounts should match exactly:
 ```sql
 SELECT 'proc' AS source, COUNT(*) AS n FROM TRAFFIC_PEMS_DB.EDW.dim_freeway
 UNION ALL
-SELECT 'dbt',  COUNT(*) FROM TRAFFIC_PEMS_DB.DBT_MARTS.dim_freeway;
+SELECT 'dbt',  COUNT(*) FROM TRAFFIC_PEMS_DB.DBT_DEV_MARTS.dim_freeway;
 ```
 
 ## What's here today

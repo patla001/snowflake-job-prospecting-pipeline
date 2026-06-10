@@ -77,7 +77,7 @@ flowchart LR
 | Warehouse | **Snowflake** | Dimensional model (SCD2 + Type 1), clustered hourly fact, daily rollup |
 | Orchestration | **Apache Airflow 3.x** (Astro Runtime) | 8-task DAG: COPY INTO → dedupe → SCD2 → fact → rollup |
 | Transform | **Snowflake Scripting procs** | Idempotent MERGE-style upserts for staging, dims, fact, rollup |
-| Transform (next) | **dbt-snowflake** ([`dbt/`](dbt/README.md)) | Bootstrapped — one model (`dim_freeway`) ported, builds side-by-side in `DBT_MARTS` while procs continue to own `EDW` |
+| Transform (next) | **dbt-snowflake** ([`dbt/`](dbt/README.md)) | Bootstrapped — one model (`dim_freeway`) ported, builds side-by-side in `DBT_DEV_MARTS` while procs continue to own `EDW` |
 | Ingest | **SnowSQL `PUT`** via [`scripts/r3_backfill_year.sh`](scripts/r3_backfill_year.sh) | Multi-year + bash-3.2-portable backfill script with password prompt |
 | BI | **Tableau Desktop + Tableau Public** | 5 curated views in `ANALYTICS` schema; extract-based for the hourly grain |
 | Tests | **pytest** | DAG import, retries ≥ 2, tag presence |
