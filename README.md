@@ -1,5 +1,6 @@
 # Caltrans PeMS Traffic Analytics
 
+[![CI](https://github.com/patla001/snowflake-pems-traffic-pipeline/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/patla001/snowflake-pems-traffic-pipeline/actions/workflows/ci.yml)
 ![Snowflake](https://img.shields.io/badge/Snowflake-29B5E8?logo=snowflake&logoColor=white)
 ![Airflow](https://img.shields.io/badge/Airflow-3.2-017CEE?logo=apacheairflow&logoColor=white)
 ![dbt](https://img.shields.io/badge/dbt--snowflake-1.8-FF694A?logo=dbt&logoColor=white)
