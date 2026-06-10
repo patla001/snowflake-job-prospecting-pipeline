@@ -102,6 +102,7 @@ A `dbt/` subproject at the repo root is being introduced alongside the procs. Co
 - **Run via `./scripts/dbt.sh <cmd>`** — wrapper sources `.env` (so `SNOWSQL_PWD` is set) and pins `--profiles-dir`/`--project-dir` to `./dbt`. `profiles.yml` is committed (no secrets — password comes from `SNOWSQL_PWD` env var via `env_var()`).
 - **Schema isolation** — dbt builds into `TRAFFIC_PEMS_DB.DBT_DEV_MARTS` (dbt prepends the target name `DBT_DEV` to `MARTS`). The procs continue to own `EDW`. Diff rowcounts/columns between the two before repointing anything (Tableau, downstream views).
 - **Ports in progress** — only `dim_freeway` is dbt-built today. The proc-built `EDW.dim_freeway` is still authoritative; the dbt copy exists for verification.
+- **Airflow integration** — `dags/pems_dbt_build_dag.py` runs `dbt deps + snapshot + build` via a `BashOperator` against a separate venv pre-baked into the Airflow image at `/opt/dbt-venv` (see `Dockerfile`/`Dockerfile.local`). docker-compose mounts `./dbt:/opt/airflow/dbt`; Astro's `Dockerfile` `COPY dbt /usr/local/airflow/dbt` since Astro's ONBUILD only auto-copies dags/plugins/include.
 
 ## Conventions worth knowing
 
